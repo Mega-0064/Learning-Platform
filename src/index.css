@@ -1,0 +1,51 @@
+/* Import Roboto font for Material-UI */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+/* Reset styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  /* Material-UI uses Roboto as default font */
+  font-family: 'Roboto', sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  
+  /* Set light theme by default */
+  color: #213547;
+  background-color: #ffffff;
+  
+  /* Optimize text rendering */
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  /* Remove the flex display that was causing layout issues */
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: #f5f5f5; /* Match the theme background */
+}
+
+#root {
+  height: 100%;
+  width: 100%;
+}
+
+/* Basic link styles - will be mostly overridden by Material-UI */
+a {
+  text-decoration: none;
+  color: inherit;
+}
