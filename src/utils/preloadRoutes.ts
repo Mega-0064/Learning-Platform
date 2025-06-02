@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { ComponentType, LazyExoticComponent } from 'react'; // Ensure ComponentType and LazyExoticComponent are imported
 
-// Types
-export interface PreloadableComponent<T = React.ComponentType<any>> {
+// TActual is now constrained to React.ComponentType<any> directly in the interface
+export interface PreloadableComponent<TActual extends ComponentType<any>> {
   preload: () => Promise<void>;
-  component: T;
+  component: TActual;
 }
 
 /**
@@ -11,34 +11,30 @@ export interface PreloadableComponent<T = React.ComponentType<any>> {
  * @param importFn The dynamic import function (React.lazy)
  * @returns Object with preload function and component
  */
-export function createPreloadableComponent<T = React.ComponentType<any>>(
-  importFn: () => Promise<{ default: T }>
-): PreloadableComponent<React.LazyExoticComponent<T>> {
-  // Store the dynamic import function
-  const lazyImport = importFn;
-  
-  // Create a lazy component using React.lazy
-  const LazyComponent = React.lazy(lazyImport);
+// TActual is constrained here as well.
+// The return type will be PreloadableComponent<React.LazyExoticComponent<TActual>>
+export function createPreloadableComponent<TActual extends ComponentType<any>>(
+  importFn: () => Promise<{ default: TActual }>
+): PreloadableComponent<LazyExoticComponent<TActual>> { // Adjusted return type
+  const LazyComponent = React.lazy(importFn); // React.lazy will infer the type correctly here
   
   // Return an object with the component and a preload function
   return {
     component: LazyComponent,
-    preload: () => {
+    preload: (): Promise<void> => { // Explicitly set return type
       try {
-        // Initiate the dynamic import but don't wait for it to complete
-        const preloadPromise = lazyImport().then(
-          (moduleExports) => {
+          return importFn().then( // Changed from lazyImport() to importFn() for clarity
+          () => {
             // Import completed successfully
             console.debug(`Route preloaded successfully`);
-            return moduleExports;
+            // No return value here, so it resolves with undefined (Promise<void>)
           },
           (error) => {
             // Import failed
             console.error(`Route preloading failed:`, error);
-            throw error;
+            return Promise.reject(error);
           }
         );
-        return preloadPromise;
       } catch (error) {
         console.error('Preloading error:', error);
         return Promise.reject(error);
@@ -68,7 +64,7 @@ export const routes = {
  * @returns Promise that resolves when all routes are preloaded
  */
 export const preloadRoutes = (
-  routesToPreload: PreloadableComponent[]
+  routesToPreload: PreloadableComponent<ComponentType<any>>[]
 ): Promise<void[]> => {
   return Promise.all(routesToPreload.map((route) => route.preload()));
 };
@@ -87,7 +83,7 @@ export const preloadAllRoutes = (): Promise<void[]> => {
  * @returns Promise that resolves when the route is preloaded
  */
 export const preloadRouteByPath = (path: string): Promise<void> | null => {
-  const routeMap: Record<string, PreloadableComponent> = {
+  const routeMap: Record<string, PreloadableComponent<ComponentType<any>>> = {
     '/': routes.home,
     '/courses': routes.courses,
     '/profile': routes.profile,
